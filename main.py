@@ -2,10 +2,11 @@ import time
 import curses
 import asyncio
 import random
+from fire_animation import fire
 
 TIC_TIMEOUT = 0.1
 STARS = '+*.:'
-STARS_COUNT = 400
+STARS_COUNT = 100
 
 
 def generate_stars(canvas):
@@ -25,7 +26,6 @@ def generate_stars(canvas):
 def draw(canvas):
     """Main event loop."""
     # Draw border
-    canvas.border()
 
     # Turn off blinking cursor
     curses.curs_set(False)
@@ -33,19 +33,25 @@ def draw(canvas):
     # Main array of game
     coroutines = []
     stars = generate_stars(canvas)
+
+    row, column = curses.window.getmaxyx(canvas)
+    shot = fire(canvas, row - 1, int(column / 2))
     coroutines += stars
+    coroutines.append(shot)
 
     # Now game speed doesn't depend on CPU
     fix_game_speed = TIC_TIMEOUT / len(coroutines)
 
     # Main event loop thoght all coroutines
     while True:
+        canvas.border()
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
                 time.sleep(fix_game_speed)
             except StopIteration:
                 coroutines.remove(coroutine)
+                fix_game_speed = TIC_TIMEOUT / len(coroutines)
         if len(coroutines) == 0:
             break
         canvas.refresh()

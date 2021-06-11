@@ -7,9 +7,23 @@ TIC_TIMEOUT = 0.1
 STARS = '+*.:'
 STARS_COUNT = 400
 
+def generate_stars(canvas):
+    """Generate stars' coroutines."""
+    stars = []
+    # Get screen size to draw inside it
+    row, column = curses.window.getmaxyx(canvas)
+    for i in range(STARS_COUNT):
+        pos_x = random.randint(2, row - 2)
+        pos_y = random.randint(2, column - 2)
+        symbol = random.choice(STARS)
+        coroutine = blink(canvas, pos_x, pos_y, symbol)
+        stars.append(coroutine)
+    return stars
+
+
 def draw(canvas):
     """Main event loop."""
-    # Get screen size to draw inside it
+    
     row, column = curses.window.getmaxyx(canvas)
 
     # Draw border
@@ -20,14 +34,9 @@ def draw(canvas):
 
     # Main array of game
     coroutines = []
+    stars = generate_stars(canvas)
+    coroutines += stars
 
-    # Generate random stars
-    for i in range(STARS_COUNT):
-        pos_x = random.randint(2, row - 2)
-        pos_y = random.randint(2, column - 2)
-        symbol = random.choice(STARS)
-        coroutine = blink(canvas, pos_x, pos_y, symbol)
-        coroutines.append(coroutine)
 
     # Now game speed doesn't depend on CPU
     fix_game_speed = TIC_TIMEOUT / len(coroutines)

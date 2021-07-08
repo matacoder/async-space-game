@@ -25,18 +25,20 @@ def generate_stars(canvas):
 
 def draw(canvas):
     """Main event loop."""
-    # Draw border
 
     # Turn off blinking cursor
     curses.curs_set(False)
 
     # Main array of game
     coroutines = []
-    stars = generate_stars(canvas)
 
+    # Give me some stars
+    stars = generate_stars(canvas)
+    coroutines += stars
+
+    # Fire ramdom shot
     row, column = curses.window.getmaxyx(canvas)
     shot = fire(canvas, row - 1, int(column / 2))
-    coroutines += stars
     coroutines.append(shot)
 
     # Now game speed doesn't depend on CPU

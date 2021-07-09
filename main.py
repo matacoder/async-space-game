@@ -78,6 +78,16 @@ async def blink(canvas, row, column, symbol='*'):
         await sleep(3)
 
 
+async def ship(canvas, row, column, frames):
+    previous_frame = ""
+    for frame in cycle(frames):
+        # стираем предыдущий кадр, прежде чем рисовать новый
+        if previous_frame:
+            draw_frame(canvas, row, column, previous_frame, negative=True)
+        draw_frame(canvas, row, column, frame)
+        previous_frame = frame
+
+
 if __name__ == '__main__':
     curses.update_lines_cols()
     curses.wrapper(draw)

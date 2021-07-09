@@ -5,7 +5,7 @@ import random
 from fire_animation import fire
 from ship_animation import load_frames
 from itertools import cycle
-from curses_tools import draw_frame
+from curses_tools import draw_frame, read_controls
 
 TIC_TIMEOUT = 0.1
 STARS = '+*.:'
@@ -31,6 +31,9 @@ def draw(canvas):
 
     # Turn off blinking cursor
     curses.curs_set(False)
+
+    # Set input in non blocking mode
+    canvas.nodelay(True)
 
     # Main array of game
     coroutines = []
@@ -87,15 +90,25 @@ async def blink(canvas, row, column, symbol='*'):
 
 
 async def draw_ship(canvas, row, column, frames):
-    previous_frame = ""
+    old_frame = dict()
     for frame in cycle(frames):
         # стираем предыдущий кадр, прежде чем рисовать новый
-        if previous_frame:
-            draw_frame(canvas, row, column, previous_frame, negative=True)
+        if old_frame:
+            draw_frame(
+              canvas, old_frame["row"], old_frame["column"], old_frame["frame"], negative=True
+              )
         draw_frame(canvas, row, column, frame)
-        previous_frame = frame
+        old_frame = {
+          "frame": frame,
+          "row": row,
+          "column": column,
+          }
         # Animation every two ticks
         for _ in range(2):
+            # But reading controls every tick
+            rows_direction, columns_direction, _ = read_controls(canvas)
+            row += rows_direction
+            column += columns_direction
             await asyncio.sleep(0)
 
 

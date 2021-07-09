@@ -8,7 +8,7 @@ from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 
 TIC_TIMEOUT = 0.05
-STARS = '+*.:'
+STARS = "+*.:"
 STARS_COUNT = 100
 SHIP_SPEED = 10
 
@@ -77,7 +77,7 @@ async def sleep(tic=1):
         await asyncio.sleep(0)
 
 
-async def blink(canvas, row, column, symbol='*'):
+async def blink(canvas, row, column, symbol="*"):
     """Default star animation."""
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
@@ -96,14 +96,18 @@ async def draw_ship(canvas, row, column, frames):
         # стираем предыдущий кадр, прежде чем рисовать новый
         if old_frame:
             draw_frame(
-              canvas, old_frame["row"], old_frame["column"], old_frame["frame"], negative=True
-              )
+                canvas,
+                old_frame["row"],
+                old_frame["column"],
+                old_frame["frame"],
+                negative=True,
+            )
         draw_frame(canvas, row, column, frame)
         old_frame = {
-          "frame": frame,
-          "row": row,
-          "column": column,
-          }
+            "frame": frame,
+            "row": row,
+            "column": column,
+        }
         # Animation every two ticks
         for _ in range(2):
             # But reading controls every tick
@@ -129,6 +133,7 @@ def check_object_size(row, column, frame, canvas):
         column = column_limit
     return row, column
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     curses.update_lines_cols()
     curses.wrapper(draw)

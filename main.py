@@ -7,9 +7,10 @@ from ship_animation import load_frames
 from itertools import cycle
 from curses_tools import draw_frame, read_controls
 
-TIC_TIMEOUT = 0.1
+TIC_TIMEOUT = 0.05
 STARS = '+*.:'
 STARS_COUNT = 100
+SHIP_SPEED = 10
 
 
 def generate_stars(canvas):
@@ -107,8 +108,8 @@ async def draw_ship(canvas, row, column, frames):
         for _ in range(2):
             # But reading controls every tick
             rows_direction, columns_direction, _ = read_controls(canvas)
-            row += rows_direction
-            column += columns_direction
+            row += rows_direction * SHIP_SPEED
+            column += columns_direction * SHIP_SPEED
             await asyncio.sleep(0)
 
 

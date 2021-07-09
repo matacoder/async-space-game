@@ -94,7 +94,9 @@ async def draw_ship(canvas, row, column, frames):
             draw_frame(canvas, row, column, previous_frame, negative=True)
         draw_frame(canvas, row, column, frame)
         previous_frame = frame
-        await asyncio.sleep(0)
+        # Animation every two ticks
+        for _ in range(2):
+            await asyncio.sleep(0)
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ import random
 from fire_animation import fire
 from ship_animation import load_frames
 from itertools import cycle
-from curses_tools import draw_frame, read_controls
+from curses_tools import draw_frame, read_controls, get_frame_size
 
 TIC_TIMEOUT = 0.05
 STARS = '+*.:'
@@ -110,8 +110,24 @@ async def draw_ship(canvas, row, column, frames):
             rows_direction, columns_direction, _ = read_controls(canvas)
             row += rows_direction * SHIP_SPEED
             column += columns_direction * SHIP_SPEED
+            row, column = check_object_size(row, column, frame, canvas)
             await asyncio.sleep(0)
 
+
+def check_object_size(row, column, frame, canvas):
+    dimensions = get_frame_size(frame)
+    canvas_size = canvas.getmaxyx()
+    row_limit = canvas_size[0] - dimensions[0] - 1  # border pixel
+    column_limit = canvas_size[1] - dimensions[1] - 1  # border pixel
+    if row < 1:
+        row = 1
+    elif row > row_limit:
+        row = row_limit
+    if column < 1:
+        column = 1
+    elif column > column_limit:
+        column = column_limit
+    return row, column
 
 if __name__ == '__main__':
     curses.update_lines_cols()

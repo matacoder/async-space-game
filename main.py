@@ -3,6 +3,9 @@ import curses
 import asyncio
 import random
 from fire_animation import fire
+from ship_animation import load_frames
+from itertools import cycle
+from curses_tools import draw_frame
 
 TIC_TIMEOUT = 0.1
 STARS = '+*.:'
@@ -38,8 +41,13 @@ def draw(canvas):
 
     # Fire ramdom shot
     row, column = curses.window.getmaxyx(canvas)
-    shot = fire(canvas, row - 1, int(column / 2))
+    shot = fire(canvas, row - 1, column // 2)
     coroutines.append(shot)
+
+    # Add ship in the center
+    frames = load_frames()
+    ship = draw_ship(canvas, row // 2, column // 2, frames)
+    coroutines.append(ship)
 
     # Now game speed doesn't depend on CPU
     fix_game_speed = TIC_TIMEOUT / len(coroutines)
@@ -78,7 +86,7 @@ async def blink(canvas, row, column, symbol='*'):
         await sleep(3)
 
 
-async def ship(canvas, row, column, frames):
+async def draw_ship(canvas, row, column, frames):
     previous_frame = ""
     for frame in cycle(frames):
         # стираем предыдущий кадр, прежде чем рисовать новый
@@ -86,6 +94,7 @@ async def ship(canvas, row, column, frames):
             draw_frame(canvas, row, column, previous_frame, negative=True)
         draw_frame(canvas, row, column, frame)
         previous_frame = frame
+        await asyncio.sleep(0)
 
 
 if __name__ == '__main__':

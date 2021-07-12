@@ -7,10 +7,11 @@ from ship_animation import load_frames
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 
-TIC_TIMEOUT = 0.05
+TIC_TIMEOUT = 0.02
 STARS = "+*.:"
 STARS_COUNT = 100
 SHIP_SPEED = 10
+CANVAS_MARGIN = 1
 
 
 def generate_stars(canvas):
@@ -19,8 +20,8 @@ def generate_stars(canvas):
     # Get screen size to draw inside it
     row, column = curses.window.getmaxyx(canvas)
     for i in range(STARS_COUNT):
-        pos_x = random.randint(2, row - 2)
-        pos_y = random.randint(2, column - 2)
+        pos_x = random.randint(CANVAS_MARGIN, row - CANVAS_MARGIN)
+        pos_y = random.randint(CANVAS_MARGIN, column - CANVAS_MARGIN)
         symbol = random.choice(STARS)
         coroutine = blink(canvas, pos_x, pos_y, symbol)
         stars.append(coroutine)
@@ -45,7 +46,7 @@ def draw(canvas):
 
     # Fire ramdom shot
     row, column = curses.window.getmaxyx(canvas)
-    shot = fire(canvas, row - 1, column // 2)
+    shot = fire(canvas, row - CANVAS_MARGIN, column // 2)
     coroutines.append(shot)
 
     # Add ship in the center
@@ -54,7 +55,7 @@ def draw(canvas):
     coroutines.append(ship)
 
     # Now game speed doesn't depend on CPU
-    fix_game_speed = TIC_TIMEOUT / len(coroutines)
+    game_speed = TIC_TIMEOUT / len(coroutines)
 
     # Main event loop thoght all coroutines
     while True:
@@ -62,10 +63,10 @@ def draw(canvas):
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
-                time.sleep(fix_game_speed)
+                time.sleep(game_speed)
             except StopIteration:
                 coroutines.remove(coroutine)
-                fix_game_speed = TIC_TIMEOUT / len(coroutines)
+                game_speed = TIC_TIMEOUT / len(coroutines)
         if len(coroutines) == 0:
             break
         canvas.refresh()
@@ -119,16 +120,16 @@ async def draw_ship(canvas, row, column, frames):
 
 
 def check_object_size(row, column, frame, canvas):
-    dimensions = get_frame_size(frame)
-    canvas_size = canvas.getmaxyx()
-    row_limit = canvas_size[0] - dimensions[0] - 1  # border pixel
-    column_limit = canvas_size[1] - dimensions[1] - 1  # border pixel
-    if row < 1:
-        row = 1
+    object_height, object_width = get_frame_size(frame)
+    canvas_height, canvas_width = canvas.getmaxyx()
+    row_limit = canvas_height - object_height - CANVAS_MARGIN
+    column_limit = canvas_width - object_width - CANVAS_MARGIN
+    if row < CANVAS_MARGIN:
+        row = CANVAS_MARGIN
     elif row > row_limit:
         row = row_limit
-    if column < 1:
-        column = 1
+    if column < CANVAS_MARGIN:
+        column = CANVAS_MARGIN
     elif column > column_limit:
         column = column_limit
     return row, column

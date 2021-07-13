@@ -14,17 +14,14 @@ STARS_COUNT = 100
 SHIP_SPEED = 2
 CANVAS_MARGIN = 2
 
-
 current_ship_frame = ""
 current_ship_row = 0
 current_ship_column = 0
 
 
-def generate_stars(canvas):
+def generate_stars(canvas, total_rows, total_columns):
     """Generate stars' coroutines."""
     stars = []
-
-    total_rows, total_columns = curses.window.getmaxyx(canvas)
 
     for _ in range(STARS_COUNT):
         pos_x = random.randint(CANVAS_MARGIN, total_rows - CANVAS_MARGIN)
@@ -36,31 +33,41 @@ def generate_stars(canvas):
     return stars
 
 
+def initialize_ship(canvas, total_rows, total_columns):
+    """First ship appearance in the center of canvas."""
+    frames = load_frames()
+    global current_ship_row
+    global current_ship_column
+
+    current_ship_row = total_rows // 2
+    current_ship_column = total_columns // 2
+
+    ship = draw_ship(canvas, current_ship_row, current_ship_column, frames)
+    return ship
+
+
+def fire_random_shot(canvas, total_rows, total_columns):
+    """Fire random shot in the center of screen."""
+    shot = fire(canvas, total_rows - CANVAS_MARGIN, total_columns // 2)
+    return shot
+
+
 def draw(canvas):
     """Main event loop."""
 
     curses.curs_set(False)
     canvas.nodelay(True)
+    total_rows, total_columns = curses.window.getmaxyx(canvas)
 
     coroutines = []
 
-    stars = generate_stars(canvas)
+    stars = generate_stars(canvas, total_rows, total_columns)
     coroutines += stars
 
-
-    total_rows, total_columns = curses.window.getmaxyx(canvas)
-    shot = fire(canvas, total_rows - CANVAS_MARGIN, total_columns // 2)
+    shot = fire_random_shot(canvas, total_rows, total_columns)
     coroutines.append(shot)
 
-
-    frames = load_frames()
-    global current_ship_row
-    global current_ship_column
-
-    current_ship_row = total_rows // 2    
-    current_ship_column = total_columns // 2
-
-    ship = draw_ship(canvas, current_ship_row, current_ship_column, frames)
+    ship = initialize_ship(canvas, total_rows, total_columns)
     coroutines.append(ship)
 
     game_speed = TIC_TIMEOUT / len(coroutines)
@@ -80,9 +87,10 @@ def draw(canvas):
 
 
 def pause_game_with_responsive_controls(game_speed, canvas):
+    """Increased game RESPONSIVENESS for controls."""
     for _ in range(RESPONSIVENESS):
         read_controls_and_move_ship(canvas)
-        time.sleep(game_speed/RESPONSIVENESS)
+        time.sleep(game_speed / RESPONSIVENESS)
 
 
 async def sleep(tic=1):
@@ -127,12 +135,13 @@ def erase_ship_frame(canvas):
             negative=True,
         )
 
+
 def read_controls_and_move_ship(canvas):
     """Read controls and immediately move ship."""
     rows_direction, columns_direction, _ = read_controls(canvas)
     if rows_direction or columns_direction:
         erase_ship_frame(canvas)
-        
+
         global current_ship_row
         global current_ship_column
 
@@ -142,7 +151,7 @@ def read_controls_and_move_ship(canvas):
         current_ship_row, current_ship_column = check_object_size(
             current_ship_row, current_ship_column, current_ship_frame, canvas
         )
-        
+
         draw_frame(canvas, current_ship_row, current_ship_column, current_ship_frame)
 
 

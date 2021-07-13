@@ -8,6 +8,7 @@ from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 
 TIC_TIMEOUT = 0.05
+RESPONSIVENESS = 25
 STARS = "+*.:"
 STARS_COUNT = 100
 SHIP_SPEED = 2
@@ -68,15 +69,20 @@ def draw(canvas):
         canvas.border()
         for coroutine in coroutines.copy():
             try:
-                read_controls_and_move_ship(canvas)
                 coroutine.send(None)
-                time.sleep(game_speed)
+                pause_game_with_responsive_controls(game_speed, canvas)
             except StopIteration:
                 coroutines.remove(coroutine)
                 game_speed = TIC_TIMEOUT / len(coroutines)
         if len(coroutines) == 0:
             break
         canvas.refresh()
+
+
+def pause_game_with_responsive_controls(game_speed, canvas):
+    for _ in range(RESPONSIVENESS):
+        read_controls_and_move_ship(canvas)
+        time.sleep(game_speed/RESPONSIVENESS)
 
 
 async def sleep(tic=1):

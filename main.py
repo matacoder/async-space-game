@@ -3,7 +3,7 @@ import curses
 import asyncio
 import random
 from fire_animation import fire
-from ship_animation import load_frames
+from load_animation import load_frames
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 
@@ -57,9 +57,11 @@ def draw(canvas):
     # Add ship in the center
     frames = load_frames()
     global current_ship_row
-    current_ship_row = total_rows // 2
     global current_ship_column
+
+    current_ship_row = total_rows // 2    
     current_ship_column = total_columns // 2
+
     ship = draw_ship(canvas, current_ship_row, current_ship_column, frames)
     coroutines.append(ship)
 
@@ -71,8 +73,7 @@ def draw(canvas):
         canvas.border()
         for coroutine in coroutines.copy():
             try:
-                if current_ship_frame:
-                    read_controls_and_move_ship(canvas)
+                read_controls_and_move_ship(canvas)
                 coroutine.send(None)
                 time.sleep(game_speed)
             except StopIteration:
@@ -158,6 +159,10 @@ def check_object_size(row, column, frame, canvas):
     return row, column
 
 
-if __name__ == "__main__":
+def main():
     curses.update_lines_cols()
     curses.wrapper(draw)
+
+
+if __name__ == "__main__":
+    main()

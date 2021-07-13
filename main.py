@@ -7,21 +7,26 @@ from ship_animation import load_frames
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 
-TIC_TIMEOUT = 0.02
+TIC_TIMEOUT = 0.05
 STARS = "+*.:"
 STARS_COUNT = 100
-SHIP_SPEED = 10
+SHIP_SPEED = 2
 CANVAS_MARGIN = 1
+
+# Global ship position and frame
+current_ship_frame = ""
+current_ship_row = 0
+current_ship_column = 0
 
 
 def generate_stars(canvas):
     """Generate stars' coroutines."""
     stars = []
     # Get screen size to draw inside it
-    row, column = curses.window.getmaxyx(canvas)
+    total_rows, total_columns = curses.window.getmaxyx(canvas)
     for i in range(STARS_COUNT):
-        pos_x = random.randint(CANVAS_MARGIN, row - CANVAS_MARGIN)
-        pos_y = random.randint(CANVAS_MARGIN, column - CANVAS_MARGIN)
+        pos_x = random.randint(CANVAS_MARGIN, total_rows - CANVAS_MARGIN)
+        pos_y = random.randint(CANVAS_MARGIN, total_columns - CANVAS_MARGIN)
         symbol = random.choice(STARS)
         coroutine = blink(canvas, pos_x, pos_y, symbol)
         stars.append(coroutine)
@@ -45,13 +50,17 @@ def draw(canvas):
     coroutines += stars
 
     # Fire ramdom shot
-    row, column = curses.window.getmaxyx(canvas)
-    shot = fire(canvas, row - CANVAS_MARGIN, column // 2)
+    total_rows, total_columns = curses.window.getmaxyx(canvas)
+    shot = fire(canvas, total_rows - CANVAS_MARGIN, total_columns // 2)
     coroutines.append(shot)
 
     # Add ship in the center
     frames = load_frames()
-    ship = draw_ship(canvas, row // 2, column // 2, frames)
+    global current_ship_row
+    current_ship_row = total_rows // 2
+    global current_ship_column
+    current_ship_column = total_columns // 2
+    ship = draw_ship(canvas, current_ship_row, current_ship_column, frames)
     coroutines.append(ship)
 
     # Now game speed doesn't depend on CPU
@@ -62,6 +71,8 @@ def draw(canvas):
         canvas.border()
         for coroutine in coroutines.copy():
             try:
+                if current_ship_frame:
+                    read_controls_and_move_ship(canvas)
                 coroutine.send(None)
                 time.sleep(game_speed)
             except StopIteration:
@@ -92,31 +103,43 @@ async def blink(canvas, row, column, symbol="*"):
 
 
 async def draw_ship(canvas, row, column, frames):
-    old_frame = dict()
+    global current_ship_frame
     for frame in cycle(frames):
         # стираем предыдущий кадр, прежде чем рисовать новый
-        if old_frame:
-            draw_frame(
-                canvas,
-                old_frame["row"],
-                old_frame["column"],
-                old_frame["frame"],
-                negative=True,
-            )
-        draw_frame(canvas, row, column, frame)
-        old_frame = {
-            "frame": frame,
-            "row": row,
-            "column": column,
-        }
+        erase_ship_frame(canvas)
+        draw_frame(canvas, current_ship_row, current_ship_column, frame)
+        current_ship_frame = frame
         # Animation every two ticks
         for _ in range(2):
-            # But reading controls every tick
-            rows_direction, columns_direction, _ = read_controls(canvas)
-            row += rows_direction * SHIP_SPEED
-            column += columns_direction * SHIP_SPEED
-            row, column = check_object_size(row, column, frame, canvas)
             await asyncio.sleep(0)
+
+
+def erase_ship_frame(canvas):
+    if current_ship_frame:
+        draw_frame(
+            canvas,
+            current_ship_row,
+            current_ship_column,
+            current_ship_frame,
+            negative=True,
+        )
+
+def read_controls_and_move_ship(canvas):
+    rows_direction, columns_direction, _ = read_controls(canvas)
+    if rows_direction or columns_direction:
+        erase_ship_frame(canvas)
+        
+        global current_ship_row
+        global current_ship_column
+
+        current_ship_row += rows_direction * SHIP_SPEED
+        current_ship_column += columns_direction * SHIP_SPEED
+
+        current_ship_row, current_ship_column = check_object_size(
+            current_ship_row, current_ship_column, current_ship_frame, canvas
+        )
+        
+        draw_frame(canvas, current_ship_row, current_ship_column, current_ship_frame)
 
 
 def check_object_size(row, column, frame, canvas):

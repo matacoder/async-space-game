@@ -11,9 +11,9 @@ TIC_TIMEOUT = 0.05
 STARS = "+*.:"
 STARS_COUNT = 100
 SHIP_SPEED = 2
-CANVAS_MARGIN = 1
+CANVAS_MARGIN = 2
 
-# Global ship position and frame
+
 current_ship_frame = ""
 current_ship_row = 0
 current_ship_column = 0
@@ -22,39 +22,36 @@ current_ship_column = 0
 def generate_stars(canvas):
     """Generate stars' coroutines."""
     stars = []
-    # Get screen size to draw inside it
+
     total_rows, total_columns = curses.window.getmaxyx(canvas)
-    for i in range(STARS_COUNT):
+
+    for _ in range(STARS_COUNT):
         pos_x = random.randint(CANVAS_MARGIN, total_rows - CANVAS_MARGIN)
         pos_y = random.randint(CANVAS_MARGIN, total_columns - CANVAS_MARGIN)
         symbol = random.choice(STARS)
         coroutine = blink(canvas, pos_x, pos_y, symbol)
         stars.append(coroutine)
+
     return stars
 
 
 def draw(canvas):
     """Main event loop."""
 
-    # Turn off blinking cursor
     curses.curs_set(False)
-
-    # Set input in non blocking mode
     canvas.nodelay(True)
 
-    # Main array of game
     coroutines = []
 
-    # Give me some stars
     stars = generate_stars(canvas)
     coroutines += stars
 
-    # Fire ramdom shot
+
     total_rows, total_columns = curses.window.getmaxyx(canvas)
     shot = fire(canvas, total_rows - CANVAS_MARGIN, total_columns // 2)
     coroutines.append(shot)
 
-    # Add ship in the center
+
     frames = load_frames()
     global current_ship_row
     global current_ship_column
@@ -65,10 +62,8 @@ def draw(canvas):
     ship = draw_ship(canvas, current_ship_row, current_ship_column, frames)
     coroutines.append(ship)
 
-    # Now game speed doesn't depend on CPU
     game_speed = TIC_TIMEOUT / len(coroutines)
 
-    # Main event loop thoght all coroutines
     while True:
         canvas.border()
         for coroutine in coroutines.copy():
@@ -104,18 +99,19 @@ async def blink(canvas, row, column, symbol="*"):
 
 
 async def draw_ship(canvas, row, column, frames):
+    """Ship animation."""
     global current_ship_frame
     for frame in cycle(frames):
-        # стираем предыдущий кадр, прежде чем рисовать новый
         erase_ship_frame(canvas)
         draw_frame(canvas, current_ship_row, current_ship_column, frame)
         current_ship_frame = frame
-        # Animation every two ticks
+
         for _ in range(2):
             await asyncio.sleep(0)
 
 
 def erase_ship_frame(canvas):
+    """Remove current ship from canvas."""
     if current_ship_frame:
         draw_frame(
             canvas,
@@ -126,6 +122,7 @@ def erase_ship_frame(canvas):
         )
 
 def read_controls_and_move_ship(canvas):
+    """Read controls and immediately move ship."""
     rows_direction, columns_direction, _ = read_controls(canvas)
     if rows_direction or columns_direction:
         erase_ship_frame(canvas)
@@ -144,6 +141,7 @@ def read_controls_and_move_ship(canvas):
 
 
 def check_object_size(row, column, frame, canvas):
+    """Check if object is trying to move outside of canves."""
     object_height, object_width = get_frame_size(frame)
     canvas_height, canvas_width = canvas.getmaxyx()
     row_limit = canvas_height - object_height - CANVAS_MARGIN

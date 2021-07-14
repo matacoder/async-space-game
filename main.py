@@ -8,8 +8,8 @@ from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
 
-TIC_TIMEOUT = 0.05
-RESPONSIVENESS = 25
+TIC_TIMEOUT = 0.1
+RESPONSIVENESS = 1
 STARS = "+*.:"
 STARS_COUNT = 100
 SHIP_SPEED = 2
@@ -85,7 +85,7 @@ def draw(canvas):
     while True:
         canvas.border()
 
-        if game_difficulty > random.choice(range(0,10)):
+        if game_difficulty > random.choice(range(0,30)):
             random_garbage = add_random_garbage(canvas, total_columns)
             coroutines.append(random_garbage)
 

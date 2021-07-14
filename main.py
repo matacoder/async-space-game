@@ -19,6 +19,7 @@ current_ship_frame = ""
 current_ship_row = 0
 current_ship_column = 0
 
+game_difficulty = 1
 
 def generate_stars(canvas, total_rows, total_columns):
     """Generate stars' coroutines."""
@@ -84,8 +85,9 @@ def draw(canvas):
     while True:
         canvas.border()
 
-        random_garbage = add_random_garbage(canvas, total_columns)
-        coroutines.append(random_garbage)
+        if game_difficulty > random.choice(range(0,10)):
+            random_garbage = add_random_garbage(canvas, total_columns)
+            coroutines.append(random_garbage)
 
         for coroutine in coroutines.copy():
             try:

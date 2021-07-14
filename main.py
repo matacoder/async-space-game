@@ -21,6 +21,8 @@ current_ship_column = 0
 
 game_difficulty = 1
 
+coroutines = []
+
 def generate_stars(canvas, total_rows, total_columns):
     """Generate stars' coroutines."""
     stars = []
@@ -54,11 +56,16 @@ def fire_random_shot(canvas, total_rows, total_columns):
     return shot
 
 
-def add_random_garbage(canvas, total_columns):
+async def fill_orbit_with_garbage(canvas, total_columns):
+    global coroutines
     garbage = load_frames("garbage")
-    garbage_frame = random.choice(garbage)
-    column = random.choice(range(1, total_columns))
-    return fly_garbage(canvas, column, garbage_frame, speed=0.5)
+    while True:
+        if game_difficulty > random.choice(range(0,30)):
+            garbage_frame = random.choice(garbage)
+            column = random.choice(range(1, total_columns))
+            random_garbage = fly_garbage(canvas, column, garbage_frame, speed=0.5)
+            coroutines.append(random_garbage)
+        await asyncio.sleep(0)
 
 
 
@@ -69,7 +76,7 @@ def draw(canvas):
     canvas.nodelay(True)
     total_rows, total_columns = curses.window.getmaxyx(canvas)
 
-    coroutines = []
+    global coroutines
 
     stars = generate_stars(canvas, total_rows, total_columns)
     coroutines += stars
@@ -80,14 +87,13 @@ def draw(canvas):
     ship = initialize_ship(canvas, total_rows, total_columns)
     coroutines.append(ship)
 
+    garbage_generator = fill_orbit_with_garbage(canvas, total_columns)
+    coroutines.append(garbage_generator)
+
     game_speed = TIC_TIMEOUT / len(coroutines)
 
     while True:
         canvas.border()
-
-        if game_difficulty > random.choice(range(0,30)):
-            random_garbage = add_random_garbage(canvas, total_columns)
-            coroutines.append(random_garbage)
 
         for coroutine in coroutines.copy():
             try:

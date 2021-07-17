@@ -9,7 +9,7 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
 
 TIC_TIMEOUT = 0.1
-RESPONSIVENESS = 1
+RESPONSIVENESS = 2
 STARS = "+*.:"
 STARS_COUNT = 100
 SHIP_SPEED = 2
@@ -57,6 +57,7 @@ def fire_random_shot(canvas, total_rows, total_columns):
 
 
 async def fill_orbit_with_garbage(canvas, total_columns):
+    """Garbage generator coroutine."""
     global coroutines
     garbage = load_frames("garbage")
     while True:
@@ -66,7 +67,6 @@ async def fill_orbit_with_garbage(canvas, total_columns):
             random_garbage = fly_garbage(canvas, column, garbage_frame, speed=0.5)
             coroutines.append(random_garbage)
         await asyncio.sleep(0)
-
 
 
 def draw(canvas):
@@ -114,14 +114,15 @@ def pause_game_with_responsive_controls(game_speed, canvas):
         time.sleep(game_speed / RESPONSIVENESS)
 
 
-async def sleep(tic=1):
-    """Randomize star blinking."""
-    for _ in range(tic + random.randint(0, 10)):
+async def sleep(tics=1):
+    """Help waiting for other coroutines."""
+    for _ in range(tics):
         await asyncio.sleep(0)
 
 
 async def blink(canvas, row, column, symbol="*"):
-    """Default star animation."""
+    """Default star animation with randomizer."""
+    await sleep(random.randint(0, 30))
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
         await sleep(20)
@@ -141,8 +142,7 @@ async def draw_ship(canvas, row, column, frames):
         draw_frame(canvas, current_ship_row, current_ship_column, frame)
         current_ship_frame = frame
 
-        for _ in range(2):
-            await asyncio.sleep(0)
+        await sleep(2)
 
 
 def erase_ship_frame(canvas):

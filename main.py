@@ -23,6 +23,7 @@ game_difficulty = 1
 
 coroutines = []
 
+
 def generate_stars(canvas, total_rows, total_columns):
     """Generate stars' coroutines."""
     stars = []
@@ -61,7 +62,7 @@ async def fill_orbit_with_garbage(canvas, total_columns):
     global coroutines
     garbage = load_frames("garbage")
     while True:
-        if game_difficulty > random.choice(range(0,30)):
+        if game_difficulty > random.choice(range(0, 30)):
             garbage_frame = random.choice(garbage)
             column = random.choice(range(1, total_columns))
             random_garbage = fly_garbage(canvas, column, garbage_frame, speed=0.5)

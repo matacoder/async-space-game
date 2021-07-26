@@ -1,9 +1,8 @@
 PATHS = {
     "ship": [
-      "animation/rocket_frame_1.txt",
-      "animation/rocket_frame_2.txt",
+        "animation/rocket_frame_1.txt",
+        "animation/rocket_frame_2.txt",
     ],
-
     "garbage": [
         "animation/duck.txt",
         "animation/hubble.txt",
@@ -13,9 +12,11 @@ PATHS = {
         "animation/trash_xl.txt",
     ],
 }
+
+
 def load_frames(type_="ship"):
-  frames = []
-  for path in PATHS[type_]:
-    with open(path, "r") as f:
-      frames.append(f.read())
-  return frames
+    frames = []
+    for path in PATHS[type_]:
+        with open(path, "r") as f:
+            frames.append(f.read())
+    return frames

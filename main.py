@@ -7,6 +7,7 @@ from load_animation import load_frames
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
+from physics import update_speed
 
 TIC_TIMEOUT = 0.01
 RESPONSIVENESS = 2
@@ -18,6 +19,9 @@ CANVAS_MARGIN = 2
 current_ship_frame = ""
 current_ship_row = 0
 current_ship_column = 0
+
+row_speed = 0
+column_speed = 0
 
 game_difficulty = 1
 
@@ -162,17 +166,23 @@ def read_controls_and_move_ship(canvas):
     global current_ship_row
     global current_ship_column
     global coroutines
+    global row_speed
+    global column_speed
 
     rows_direction, columns_direction, space_bar = read_controls(canvas)
+
+    row_speed, column_speed = update_speed(
+        row_speed, column_speed, rows_direction, columns_direction
+    )
 
     if space_bar:
         shot = fire_random_shot(canvas, current_ship_row, current_ship_column)
         coroutines.append(shot)
 
-    if rows_direction or columns_direction:
+    if rows_direction or columns_direction or row_speed or column_speed:
         erase_ship_frame(canvas)
-        current_ship_row += rows_direction * SHIP_SPEED
-        current_ship_column += columns_direction * SHIP_SPEED
+        current_ship_row += row_speed * SHIP_SPEED
+        current_ship_column += column_speed * SHIP_SPEED
 
         current_ship_row, current_ship_column = check_object_size(
             current_ship_row, current_ship_column, current_ship_frame, canvas

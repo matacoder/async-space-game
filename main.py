@@ -8,7 +8,7 @@ from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
 
-TIC_TIMEOUT = 0.01
+TIC_TIMEOUT = 0.05
 RESPONSIVENESS = 2
 STARS = "+*.:"
 STARS_COUNT = 100
@@ -53,7 +53,8 @@ def initialize_ship(canvas, total_rows, total_columns):
 
 def fire_random_shot(canvas, position_rows, position_columns):
     """Fire random shot in the center of screen."""
-    shot = fire(canvas, position_rows, position_columns)
+    object_height, object_width = get_frame_size(current_ship_frame)
+    shot = fire(canvas, position_rows, position_columns + object_width / 2)
     return shot
 
 

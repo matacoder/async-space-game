@@ -8,7 +8,7 @@ from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
 
-TIC_TIMEOUT = 0.1
+TIC_TIMEOUT = 0.01
 RESPONSIVENESS = 2
 STARS = "+*.:"
 STARS_COUNT = 100
@@ -51,9 +51,9 @@ def initialize_ship(canvas, total_rows, total_columns):
     return ship
 
 
-def fire_random_shot(canvas, total_rows, total_columns):
+def fire_random_shot(canvas, position_rows, position_columns):
     """Fire random shot in the center of screen."""
-    shot = fire(canvas, total_rows - CANVAS_MARGIN, total_columns // 2)
+    shot = fire(canvas, position_rows, position_columns)
     return shot
 
 
@@ -82,8 +82,7 @@ def draw(canvas):
     stars = generate_stars(canvas, total_rows, total_columns)
     coroutines += stars
 
-    shot = fire_random_shot(canvas, total_rows, total_columns)
-    coroutines.append(shot)
+
 
     ship = initialize_ship(canvas, total_rows, total_columns)
     coroutines.append(ship)
@@ -160,13 +159,18 @@ def erase_ship_frame(canvas):
 
 def read_controls_and_move_ship(canvas):
     """Read controls and immediately move ship."""
-    rows_direction, columns_direction, _ = read_controls(canvas)
+    global current_ship_row
+    global current_ship_column
+    global coroutines
+
+    rows_direction, columns_direction, space_bar = read_controls(canvas)
+
+    if space_bar:
+        shot = fire_random_shot(canvas, current_ship_row, current_ship_column)
+        coroutines.append(shot)
+
     if rows_direction or columns_direction:
         erase_ship_frame(canvas)
-
-        global current_ship_row
-        global current_ship_column
-
         current_ship_row += rows_direction * SHIP_SPEED
         current_ship_column += columns_direction * SHIP_SPEED
 

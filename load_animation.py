@@ -11,6 +11,7 @@ PATHS = {
         "animation/trash_small.txt",
         "animation/trash_xl.txt",
     ],
+    "game_over": ["animation/game_over.txt"],
 }
 
 

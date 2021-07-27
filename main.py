@@ -16,6 +16,7 @@ STARS = "+*.:"
 STARS_COUNT = 5
 SHIP_SPEED = 2
 CANVAS_MARGIN = 2
+GAME_OVER = load_frames(type_="game_over")
 
 current_ship_frame = ""
 current_ship_row = 0

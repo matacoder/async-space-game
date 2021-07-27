@@ -61,7 +61,7 @@ def fire_random_shot(canvas, position_rows, position_columns):
     """Fire random shot in the center of screen."""
     object_height, object_width = get_frame_size(current_ship_frame)
     shot = fire(
-        canvas, position_rows, position_columns + object_width / 2, rows_speed=-0.75
+        canvas, position_rows, position_columns + object_width / 2, obstacles, rows_speed=-0.75
     )
     return shot
 

@@ -28,6 +28,7 @@ game_difficulty = 1
 
 coroutines = []
 obstacles = []
+obstacles_in_last_collisions = []
 
 
 def generate_stars(canvas, total_rows, total_columns):
@@ -61,7 +62,12 @@ def fire_random_shot(canvas, position_rows, position_columns):
     """Fire random shot in the center of screen."""
     object_height, object_width = get_frame_size(current_ship_frame)
     shot = fire(
-        canvas, position_rows, position_columns + object_width / 2, obstacles, rows_speed=-0.75
+        canvas,
+        position_rows,
+        position_columns + object_width / 2,
+        obstacles,
+        obstacles_in_last_collisions,
+        rows_speed=-0.75,
     )
     return shot
 
@@ -74,7 +80,14 @@ async def fill_orbit_with_garbage(canvas, total_columns):
         if game_difficulty > random.choice(range(0, 30)):
             garbage_frame = random.choice(garbage)
             column = random.choice(range(1, total_columns))
-            random_garbage = space_garbage.fly_garbage(canvas, column, garbage_frame, obstacles, speed=0.5)
+            random_garbage = space_garbage.fly_garbage(
+                canvas,
+                column,
+                garbage_frame,
+                obstacles,
+                obstacles_in_last_collisions,
+                speed=0.5,
+            )
             coroutines.append(random_garbage)
         await asyncio.sleep(0)
 
@@ -97,7 +110,7 @@ def draw(canvas):
     garbage_generator = fill_orbit_with_garbage(canvas, total_columns)
     coroutines.append(garbage_generator)
 
-    coroutines.append(show_obstacles(canvas, obstacles))
+    # coroutines.append(show_obstacles(canvas, obstacles))
 
     game_speed = TIC_TIMEOUT / len(coroutines)
 

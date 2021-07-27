@@ -4,7 +4,15 @@ import curses
 from obstacles import has_collision
 
 
-async def fire(canvas, start_row, start_column, obstacles, rows_speed=-0.3, columns_speed=0):
+async def fire(
+    canvas,
+    start_row,
+    start_column,
+    obstacles,
+    obstacles_in_last_collisions,
+    rows_speed=-0.3,
+    columns_speed=0,
+):
     """Display animation of gun shot, direction and speed can be specified."""
 
     row, column = start_row, start_column
@@ -35,10 +43,17 @@ async def fire(canvas, start_row, start_column, obstacles, rows_speed=-0.3, colu
 
         for obstacle in obstacles:
             if has_collision(
-                    (obstacle.row, obstacle.column,),
-                    (obstacle.rows_size, obstacle.columns_size,),
-                    (row, column),
+                (
+                    obstacle.row,
+                    obstacle.column,
+                ),
+                (
+                    obstacle.rows_size,
+                    obstacle.columns_size,
+                ),
+                (row, column),
             ):
+                obstacles_in_last_collisions.append(obstacle)
                 return
 
         row += rows_speed

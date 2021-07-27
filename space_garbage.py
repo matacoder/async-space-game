@@ -5,7 +5,9 @@ from obstacles import Obstacle
 import uuid
 
 
-async def fly_garbage(canvas, column, garbage_frame, obstacles, speed=0.5):
+async def fly_garbage(
+    canvas, column, garbage_frame, obstacles, obstacles_in_last_collisions, speed=0.5
+):
     """Animate garbage, flying from top to bottom. Column position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -19,6 +21,11 @@ async def fly_garbage(canvas, column, garbage_frame, obstacles, speed=0.5):
     row = 0
 
     while row < rows_number:
+        for i, o in enumerate(obstacles_in_last_collisions):
+            if o.uid == uid:
+                del obstacles_in_last_collisions[i]
+                return
+
         obstacles.append(
             Obstacle(
                 row=row,

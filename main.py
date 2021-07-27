@@ -6,8 +6,9 @@ from fire_animation import fire
 from load_animation import load_frames
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
-from space_garbage import fly_garbage
+import space_garbage
 from physics import update_speed
+from obstacles import Obstacle, has_collision, show_obstacles
 
 TIC_TIMEOUT = 0.05
 RESPONSIVENESS = 2
@@ -26,6 +27,7 @@ column_speed = 0
 game_difficulty = 1
 
 coroutines = []
+obstacles = []
 
 
 def generate_stars(canvas, total_rows, total_columns):
@@ -58,7 +60,9 @@ def initialize_ship(canvas, total_rows, total_columns):
 def fire_random_shot(canvas, position_rows, position_columns):
     """Fire random shot in the center of screen."""
     object_height, object_width = get_frame_size(current_ship_frame)
-    shot = fire(canvas, position_rows, position_columns + object_width / 2)
+    shot = fire(
+        canvas, position_rows, position_columns + object_width / 2, rows_speed=-0.75
+    )
     return shot
 
 
@@ -70,7 +74,7 @@ async def fill_orbit_with_garbage(canvas, total_columns):
         if game_difficulty > random.choice(range(0, 30)):
             garbage_frame = random.choice(garbage)
             column = random.choice(range(1, total_columns))
-            random_garbage = fly_garbage(canvas, column, garbage_frame, speed=0.5)
+            random_garbage = space_garbage.fly_garbage(canvas, column, garbage_frame, speed=0.5)
             coroutines.append(random_garbage)
         await asyncio.sleep(0)
 
@@ -87,8 +91,6 @@ def draw(canvas):
     stars = generate_stars(canvas, total_rows, total_columns)
     coroutines += stars
 
-
-
     ship = initialize_ship(canvas, total_rows, total_columns)
     coroutines.append(ship)
 
@@ -99,7 +101,7 @@ def draw(canvas):
 
     while True:
         canvas.border()
-
+        show_obstacles(canvas, obstacles)
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)

@@ -1,6 +1,7 @@
 from curses_tools import draw_frame, get_frame_size
 import asyncio
 
+from explosion import explode
 from obstacles import Obstacle
 import uuid
 
@@ -24,6 +25,9 @@ async def fly_garbage(
         for i, o in enumerate(obstacles_in_last_collisions):
             if o.uid == uid:
                 del obstacles_in_last_collisions[i]
+                center_row = row + object_height / 2
+                center_column = column + object_width / 2
+                await explode(canvas, center_row, center_column)
                 return
 
         obstacles.append(

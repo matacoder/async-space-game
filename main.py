@@ -222,10 +222,21 @@ def read_controls_and_move_ship(canvas):
                 obstacles_in_last_collisions.append(obstacle)
                 object_height, object_width = get_frame_size(GAME_OVER[0])
                 total_rows, total_columns = curses.window.getmaxyx(canvas)
-                draw_frame(canvas, (total_rows - object_height) // 2, (total_columns - object_width) // 2, GAME_OVER[0])
+                draw_frame(
+                    canvas,
+                    (total_rows - object_height) // 2,
+                    (total_columns - object_width) // 2,
+                    GAME_OVER[0],
+                )
                 canvas.nodelay(False)
                 canvas.getch()
-                draw_frame(canvas, (total_rows - object_height) // 2, (total_columns - object_width) // 2, GAME_OVER[0], negative=True)
+                draw_frame(
+                    canvas,
+                    (total_rows - object_height) // 2,
+                    (total_columns - object_width) // 2,
+                    GAME_OVER[0],
+                    negative=True,
+                )
                 canvas.nodelay(True)
 
         draw_frame(canvas, current_ship_row, current_ship_column, current_ship_frame)

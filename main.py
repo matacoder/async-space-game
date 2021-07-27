@@ -13,7 +13,7 @@ from obstacles import Obstacle, has_collision, show_obstacles
 TIC_TIMEOUT = 0.05
 RESPONSIVENESS = 2
 STARS = "+*.:"
-STARS_COUNT = 100
+STARS_COUNT = 5
 SHIP_SPEED = 2
 CANVAS_MARGIN = 2
 
@@ -74,7 +74,7 @@ async def fill_orbit_with_garbage(canvas, total_columns):
         if game_difficulty > random.choice(range(0, 30)):
             garbage_frame = random.choice(garbage)
             column = random.choice(range(1, total_columns))
-            random_garbage = space_garbage.fly_garbage(canvas, column, garbage_frame, speed=0.5)
+            random_garbage = space_garbage.fly_garbage(canvas, column, garbage_frame, obstacles, speed=0.5)
             coroutines.append(random_garbage)
         await asyncio.sleep(0)
 
@@ -97,11 +97,13 @@ def draw(canvas):
     garbage_generator = fill_orbit_with_garbage(canvas, total_columns)
     coroutines.append(garbage_generator)
 
+    coroutines.append(show_obstacles(canvas, obstacles))
+
     game_speed = TIC_TIMEOUT / len(coroutines)
 
     while True:
         canvas.border()
-        show_obstacles(canvas, obstacles)
+
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
@@ -111,6 +113,7 @@ def draw(canvas):
                 game_speed = TIC_TIMEOUT / len(coroutines)
         if len(coroutines) == 0:
             break
+
         canvas.refresh()
 
 

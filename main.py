@@ -207,12 +207,32 @@ def read_controls_and_move_ship(canvas):
         current_ship_row, current_ship_column = check_object_size(
             current_ship_row, current_ship_column, current_ship_frame, canvas
         )
+        for obstacle in obstacles:
+            if has_collision(
+                (
+                    obstacle.row,
+                    obstacle.column,
+                ),
+                (
+                    obstacle.rows_size,
+                    obstacle.columns_size,
+                ),
+                (current_ship_row, current_ship_column),
+            ):
+                obstacles_in_last_collisions.append(obstacle)
+                object_height, object_width = get_frame_size(GAME_OVER[0])
+                total_rows, total_columns = curses.window.getmaxyx(canvas)
+                draw_frame(canvas, (total_rows - object_height) // 2, (total_columns - object_width) // 2, GAME_OVER[0])
+                canvas.nodelay(False)
+                canvas.getch()
+                draw_frame(canvas, (total_rows - object_height) // 2, (total_columns - object_width) // 2, GAME_OVER[0], negative=True)
+                canvas.nodelay(True)
 
         draw_frame(canvas, current_ship_row, current_ship_column, current_ship_frame)
 
 
 def check_object_size(row, column, frame, canvas):
-    """Check if object is trying to move outside of canves."""
+    """Check if object is trying to move outside of canvas."""
     object_height, object_width = get_frame_size(frame)
     canvas_height, canvas_width = canvas.getmaxyx()
     row_limit = canvas_height - object_height - CANVAS_MARGIN

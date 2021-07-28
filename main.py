@@ -11,6 +11,7 @@ import space_garbage
 from physics import update_speed
 from obstacles import Obstacle, has_collision, show_obstacles
 
+DEBUG = False
 TIC_TIMEOUT = 0.05
 RESPONSIVENESS = 2
 STARS = "+*.:"
@@ -71,7 +72,7 @@ def fire_random_shot(canvas, position_rows, position_columns):
         position_columns + object_width / 2,
         obstacles,
         obstacles_in_last_collisions,
-        rows_speed=-0.75,
+        rows_speed=-1,
     )
     return shot
 
@@ -96,6 +97,7 @@ async def fill_orbit_with_garbage(canvas, total_columns):
 
 
 async def show_history_text(canvas):
+    """Display this year in history info."""
     global current_phrase
     global year
     while True:
@@ -124,7 +126,9 @@ def draw(canvas):
     garbage_generator = fill_orbit_with_garbage(canvas, total_columns)
     coroutines.append(garbage_generator)
 
-    # coroutines.append(show_obstacles(canvas, obstacles))
+    # Show rectangles around obstacles (debug mode only).
+    if DEBUG:
+        coroutines.append(show_obstacles(canvas, obstacles))
 
     coroutines.append(show_history_text(canvas))
 
@@ -180,7 +184,6 @@ async def draw_ship(canvas, row, column, frames):
         erase_ship_frame(canvas)
         draw_frame(canvas, current_ship_row, current_ship_column, frame)
         current_ship_frame = frame
-
         await sleep(2)
 
 
@@ -210,7 +213,7 @@ def read_controls_and_move_ship(canvas):
         row_speed, column_speed, rows_direction, columns_direction
     )
 
-    if space_bar:
+    if space_bar and year >= 2020:
         shot = fire_random_shot(canvas, current_ship_row, current_ship_column)
         coroutines.append(shot)
 
@@ -228,6 +231,7 @@ def read_controls_and_move_ship(canvas):
 
 
 def check_game_over(canvas):
+    """Check collisions with star ship and show Game Over message."""
     for obstacle in obstacles:
         if has_collision(
             (
@@ -249,16 +253,19 @@ def check_game_over(canvas):
                 (total_columns - object_width) // 2,
                 GAME_OVER[0],
             )
+
             canvas.nodelay(False)
-            canvas.getch()
-            draw_frame(
-                canvas,
-                (total_rows - object_height) // 2,
-                (total_columns - object_width) // 2,
-                GAME_OVER[0],
-                negative=True,
-            )
-            canvas.nodelay(True)
+            # Press any key to continue:
+            pressed_key_code = canvas.getch()
+            if pressed_key_code:
+                draw_frame(
+                    canvas,
+                    (total_rows - object_height) // 2,
+                    (total_columns - object_width) // 2,
+                    GAME_OVER[0],
+                    negative=True,
+                )
+                canvas.nodelay(True)
 
 
 def check_object_size(row, column, frame, canvas):

@@ -3,6 +3,7 @@ import curses
 import asyncio
 import random
 from fire_animation import fire
+import game_scenario
 from load_animation import load_frames
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
@@ -26,6 +27,8 @@ row_speed = 0
 column_speed = 0
 
 game_difficulty = 1
+current_phrase = "Look at the history of space exploration!"
+year = 1955
 
 coroutines = []
 obstacles = []
@@ -78,19 +81,29 @@ async def fill_orbit_with_garbage(canvas, total_columns):
     global coroutines
     garbage = load_frames("garbage")
     while True:
-        if game_difficulty > random.choice(range(0, 30)):
-            garbage_frame = random.choice(garbage)
-            column = random.choice(range(1, total_columns))
-            random_garbage = space_garbage.fly_garbage(
-                canvas,
-                column,
-                garbage_frame,
-                obstacles,
-                obstacles_in_last_collisions,
-                speed=0.5,
-            )
-            coroutines.append(random_garbage)
-        await asyncio.sleep(0)
+        garbage_frame = random.choice(garbage)
+        column = random.choice(range(1, total_columns))
+        random_garbage = space_garbage.fly_garbage(
+            canvas,
+            column,
+            garbage_frame,
+            obstacles,
+            obstacles_in_last_collisions,
+            speed=0.5,
+        )
+        coroutines.append(random_garbage)
+        await sleep(game_scenario.get_garbage_delay_tics(year))
+
+
+async def show_history_text(canvas):
+    global current_phrase
+    global year
+    while True:
+        current_phrase = game_scenario.PHRASES.get(year, current_phrase)
+        draw_frame(canvas, 1, 2, f"{year}: {current_phrase}")
+        await sleep(int(1 / TIC_TIMEOUT))
+        draw_frame(canvas, 1, 2, f"{year}: {current_phrase}", negative=True)
+        year += 1
 
 
 def draw(canvas):
@@ -112,6 +125,8 @@ def draw(canvas):
     coroutines.append(garbage_generator)
 
     # coroutines.append(show_obstacles(canvas, obstacles))
+
+    coroutines.append(show_history_text(canvas))
 
     game_speed = TIC_TIMEOUT / len(coroutines)
 
@@ -207,39 +222,43 @@ def read_controls_and_move_ship(canvas):
         current_ship_row, current_ship_column = check_object_size(
             current_ship_row, current_ship_column, current_ship_frame, canvas
         )
-        for obstacle in obstacles:
-            if has_collision(
-                (
-                    obstacle.row,
-                    obstacle.column,
-                ),
-                (
-                    obstacle.rows_size,
-                    obstacle.columns_size,
-                ),
-                (current_ship_row, current_ship_column),
-            ):
-                obstacles_in_last_collisions.append(obstacle)
-                object_height, object_width = get_frame_size(GAME_OVER[0])
-                total_rows, total_columns = curses.window.getmaxyx(canvas)
-                draw_frame(
-                    canvas,
-                    (total_rows - object_height) // 2,
-                    (total_columns - object_width) // 2,
-                    GAME_OVER[0],
-                )
-                canvas.nodelay(False)
-                canvas.getch()
-                draw_frame(
-                    canvas,
-                    (total_rows - object_height) // 2,
-                    (total_columns - object_width) // 2,
-                    GAME_OVER[0],
-                    negative=True,
-                )
-                canvas.nodelay(True)
+        check_game_over(canvas)
 
         draw_frame(canvas, current_ship_row, current_ship_column, current_ship_frame)
+
+
+def check_game_over(canvas):
+    for obstacle in obstacles:
+        if has_collision(
+            (
+                obstacle.row,
+                obstacle.column,
+            ),
+            (
+                obstacle.rows_size,
+                obstacle.columns_size,
+            ),
+            (current_ship_row, current_ship_column),
+        ):
+            obstacles_in_last_collisions.append(obstacle)
+            object_height, object_width = get_frame_size(GAME_OVER[0])
+            total_rows, total_columns = curses.window.getmaxyx(canvas)
+            draw_frame(
+                canvas,
+                (total_rows - object_height) // 2,
+                (total_columns - object_width) // 2,
+                GAME_OVER[0],
+            )
+            canvas.nodelay(False)
+            canvas.getch()
+            draw_frame(
+                canvas,
+                (total_rows - object_height) // 2,
+                (total_columns - object_width) // 2,
+                GAME_OVER[0],
+                negative=True,
+            )
+            canvas.nodelay(True)
 
 
 def check_object_size(row, column, frame, canvas):
